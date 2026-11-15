@@ -1,0 +1,6 @@
+{
+  "name": "FraccióLab — Taller de Fraccions ESO",
+  "description": "Aplicació interactiva per a l'alumnat de secundària a Catalunya per entendre i automatitzar operacions combinades amb fraccions pas a pas, detectar errades i resoldre reptes visuals.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
