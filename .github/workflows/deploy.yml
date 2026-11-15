@@ -23,10 +23,14 @@ jobs:
       - name: Configura Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'npm'
+          node-version: 22
       - name: Instal·la dependències
-        run: npm ci
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
       - name: Compila l'aplicació
         run: npm run build
       - name: Puja l'artefacte de Pages
