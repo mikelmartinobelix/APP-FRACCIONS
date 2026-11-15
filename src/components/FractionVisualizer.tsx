@@ -202,6 +202,9 @@ export const VisualOperationExplainer: React.FC<VisualOperationExplainerProps> =
             Encreuament = {showResult ? `${prod.n}/${prod.d}` : '?'}
           </span>
         </div>
+        <p className="text-xs text-slate-600 text-center">
+          Els numeradors ({left.n} i {right.n}) multipliquen les parts escollides; els denominadors ({left.d} i {right.d}) divideixen el quadrat en {left.d * right.d} cel·les.
+        </p>
       </div>
     );
   }
@@ -237,7 +240,7 @@ export const VisualOperationExplainer: React.FC<VisualOperationExplainerProps> =
             <span className="font-mono font-semibold text-slate-900">
               {sLeft.n}/{sRight.n} = {res.n}/{res.d}
             </span>{' '}
-            vegades.
+            vegades. Per això en dividir per {right.n}/{right.d}, el {right.n} passa a dividir i el {right.d} passa a multiplicar!
           </p>
         )}
       </div>

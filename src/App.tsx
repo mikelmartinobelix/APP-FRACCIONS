@@ -15,6 +15,7 @@ import { VisualChallengeExercise } from './components/VisualChallengeExercise';
 import { VisualLab } from './components/VisualLab';
 import { ProgressView } from './components/ProgressView';
 import { GuideView } from './components/GuideView';
+import { AccessGate, isAccessUnlocked } from './components/AccessGate';
 
 type AppTab = 'practica' | 'laboratori' | 'progres' | 'guia';
 
@@ -107,6 +108,7 @@ export default function App() {
   const [completedCurrent, setCompletedCurrent] = useState(false);
   const [stats, setStats] = useState<ProgressStats>(loadStats);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [unlocked, setUnlocked] = useState<boolean>(() => isAccessUnlocked());
 
   useEffect(() => {
     try {
@@ -228,6 +230,10 @@ export default function App() {
   const handleResetStats = () => {
     setStats(EMPTY_STATS);
   };
+
+  if (!unlocked) {
+    return <AccessGate onUnlock={() => setUnlocked(true)} />;
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F7F8FA] text-slate-900">

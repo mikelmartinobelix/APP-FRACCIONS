@@ -206,8 +206,8 @@ function generatePasAPasLevel1(): PasAPasExercise {
     steps.push({
       kind: 'single_frac',
       id: 'multiply_line',
-      prompt: 'Multiplica en línia (numerador × numerador i denominador × denominador):',
-      hint: `Calcula ${f1.n} × ${f2.n} a dalt i ${f1.d} × ${f2.d} a sota.`,
+      prompt: 'Multiplica en línia (els multiplicadors a dalt i els divisors a sota):',
+      hint: `Els numeradors (${f1.n} i ${f2.n}) fan de multiplicadors a dalt (${f1.n} × ${f2.n}), i els denominadors (${f1.d} i ${f2.d}) fan de divisors a sota (${f1.d} × ${f2.d}).`,
       expected: raw,
       requireReduced: false,
       requireExactDenominator: raw.d,
@@ -230,7 +230,7 @@ function generatePasAPasLevel1(): PasAPasExercise {
       difficulty: 1,
       subtitle: 'Multiplicació de fraccions',
       conceptTip:
-        'La multiplicació de fraccions es fa en línia: no cal buscar comú denominador. Recorda simplificar el resultat!',
+        'En una fracció, el numerador té rol de multiplicador i el denominador té rol de divisor. En multiplicar, ajuntem els multiplicadors a dalt i els divisors a sota (en línia).',
       expression: [
         { kind: 'frac', value: f1 },
         { kind: 'op', value: '×' },
@@ -250,8 +250,8 @@ function generatePasAPasLevel1(): PasAPasExercise {
   steps.push({
     kind: 'dual_frac',
     id: 'invert_second',
-    prompt: 'Transforma la divisió en una multiplicació invertint la segona fracció:',
-    hint: `La primera fracció (${formatFracText(f1)}) es queda igual, i ${formatFracText(f2)} passa a ser ${formatFracText(invertedSecond)}.`,
+    prompt: 'Canvia els rols de la fracció que divideix (qui multiplicava ara divideix, i qui dividia ara multiplica):',
+    hint: `La primera fracció (${formatFracText(f1)}) manté els seus rols. A la segona (${formatFracText(f2)}), el numerador ${f2.n} agafa el rol contrari i passa a dividir a sota, i el denominador ${f2.d} passa a multiplicar a dalt (${formatFracText(invertedSecond)}).`,
     op: '×',
     expectedLeft: f1,
     expectedRight: invertedSecond,
@@ -263,7 +263,7 @@ function generatePasAPasLevel1(): PasAPasExercise {
       kind: 'single_frac',
       id: 'raw_div',
       prompt: 'Calcula el producte resultant abans de simplificar:',
-      hint: `Multiplica ${f1.n} × ${f2.d} al numerador i ${f1.d} × ${f2.n} al denominador.`,
+      hint: `Multiplica en línia amb els nous rols: ${f1.n} × ${f2.d} a dalt (multiplicadors) i ${f1.d} × ${f2.n} a sota (divisors).`,
       expected: raw,
       requireReduced: false,
       requireExactDenominator: raw.d,
@@ -281,7 +281,7 @@ function generatePasAPasLevel1(): PasAPasExercise {
       kind: 'single_frac',
       id: 'final_div',
       prompt: 'Calcula el producte final irreductible:',
-      hint: `Multiplica ${f1.n} × ${f2.d} i ${f1.d} × ${f2.n}.`,
+      hint: `Multiplica els multiplicadors (${f1.n} × ${f2.d}) a dalt i els divisors (${f1.d} × ${f2.n}) a sota.`,
       expected: finalAnswer,
       requireReduced: true,
     });
@@ -293,7 +293,7 @@ function generatePasAPasLevel1(): PasAPasExercise {
     difficulty: 1,
     subtitle: 'Divisió de fraccions',
     conceptTip:
-      'Dividir per una fracció equival a multiplicar per la seva inversa (capgirant numerador i denominador de la segona fracció).',
+      'Normalment el numerador multiplica i el denominador divideix. En dividir per una fracció, els seus rols s’inverteixen: el numerador passa a dividir (a sota) i el denominador passa a multiplicar (a dalt).',
     expression: [
       { kind: 'frac', value: f1 },
       { kind: 'op', value: '÷' },
@@ -349,8 +349,8 @@ function generatePasAPasLevel2(): PasAPasExercise {
           prompt: `Resol la ${mulOp === '×' ? 'multiplicació' : 'divisió'} prioritària (simplificada si es pot):`,
           hint:
             mulOp === '×'
-              ? `Multiplica en línia: (${b.n}×${c.n}) / (${b.d}×${c.d}) i simplifica.`
-              : `Multiplica ${formatFracText(b)} per la inversa de ${formatFracText(c)} (${c.d}/${c.n}) i simplifica.`,
+              ? `En multiplicar, els numeradors (${b.n} i ${c.n}) multipliquen a dalt i els denominadors (${b.d} i ${c.d}) divideixen a sota: (${b.n}×${c.n}) / (${b.d}×${c.d}).`
+              : `En dividir per ${formatFracText(c)}, els seus rols s’inverteixen: el numerador ${c.n} passa a dividir a sota i el denominador ${c.d} passa a multiplicar a dalt (${formatFracText(b)} × ${c.d}/${c.n}).`,
           prefixTokens: [
             { kind: 'frac', value: a },
             { kind: 'op', value: addOp },
@@ -445,8 +445,8 @@ function generatePasAPasLevel2(): PasAPasExercise {
         prompt: `Finalment, resol la ${mulOp === '×' ? 'multiplicació' : 'divisió'} i simplifica:`,
         hint:
           mulOp === '×'
-            ? `Multiplica en línia ${formatFracText(parenRes)} × ${formatFracText(c)}.`
-            : `Multiplica ${formatFracText(parenRes)} per la inversa de ${formatFracText(c)}.`,
+            ? `En multiplicar, ajunta multiplicadors a dalt i divisors a sota: ${formatFracText(parenRes)} × ${formatFracText(c)}.`
+            : `En dividir per ${formatFracText(c)}, el seu numerador (${c.n}) agafa el rol contrari (divideix a sota) i el denominador (${c.d}) passa a multiplicar a dalt: ${formatFracText(parenRes)} × ${c.d}/${c.n}.`,
         expected: total,
         requireReduced: true,
       },
@@ -536,8 +536,8 @@ function generatePasAPasLevel3(): PasAPasExercise {
           prompt: `Pas 3: Calcula ${formatFracText(leftVal)} ${midOp} ${formatFracText(rightVal)} i simplifica:`,
           hint:
             midOp === '×'
-              ? 'Multiplica en línia tenint en compte la regla dels signes.'
-              : 'Multiplica la primera fracció per la inversa de la segona i simplifica.',
+              ? 'Multiplica en línia (numeradors com a multiplicadors a dalt, denominadors com a divisors a sota) vigilant la regla dels signes.'
+              : 'En dividir per la segona fracció, el seu numerador passa a dividir (a sota) i el seu denominador passa a multiplicar (a dalt).',
           expected: total,
           requireReduced: true,
         },
@@ -804,7 +804,7 @@ function generateDetectaErrada(difficulty: Difficulty): DetectaErradaExercise {
       id: makeId('err'),
       difficulty: 1,
       subtitle: 'Divisió de fraccions',
-      conceptTip: 'En dividir dues fraccions, només s’inverteix la segona fracció (el divisor), mai la primera!',
+      conceptTip: 'En dividir per una fracció, només s’inverteixen els rols de la segona fracció (el divisor): el seu numerador passa a dividir i el seu denominador a multiplicar. La primera fracció conserva els seus rols!',
       studentName,
       expression: [
         { kind: 'frac', value: a },
@@ -833,7 +833,7 @@ function generateDetectaErrada(difficulty: Difficulty): DetectaErradaExercise {
       reasonOptions: [
         {
           id: 'inverted_first',
-          text: 'Ha invertit la primera fracció en comptes d’invertir la segona (el divisor).',
+          text: 'Ha invertit els rols de la primera fracció en comptes d’invertir els de la segona (que és la que divideix).',
         },
         {
           id: 'forgot_op_change',
@@ -846,7 +846,7 @@ function generateDetectaErrada(difficulty: Difficulty): DetectaErradaExercise {
       ],
       correctReasonId: 'inverted_first',
       correctFinalAnswer: correct,
-      explanationSummary: `Cal mantenir ${formatFracText(a)} i invertir ${formatFracText(b)} a ${b.d}/${b.n}: el resultat correcte és ${formatFracText(correct)}.`,
+      explanationSummary: `Cal mantenir els rols de ${formatFracText(a)} i invertir només els de ${formatFracText(b)} (${b.n} passa a dividir a sota i ${b.d} a multiplicar a dalt): ${formatFracText(a)} × ${b.d}/${b.n} = ${formatFracText(correct)}.`,
     };
   }
 
@@ -1043,7 +1043,10 @@ function generateNombreFalta(difficulty: Difficulty): NombreFaltaExercise {
       id: makeId('mis'),
       difficulty: 1,
       subtitle: 'Troba el denominador ocult',
-      conceptTip: 'Desfés la multiplicació o divisió comparant la fracció resultant amb el numerador conegut.',
+      conceptTip:
+        op === '÷'
+          ? 'Recorda que dividir per una fracció inverteix els rols de la segona fracció: el numerador divideix i el denominador multiplica.'
+          : 'Recorda els rols: en multiplicar, el numerador multiplica i el denominador divideix. Pots desfer l’operació des del resultat.',
       leftSide: [
         { kind: 'frac', n: f1.n, d: f1.d },
         { kind: 'op', value: op },
@@ -1053,7 +1056,10 @@ function generateNombreFalta(difficulty: Difficulty): NombreFaltaExercise {
       missingTarget: 'd',
       expectedValue: f2.d,
       maxAllowedDenominator: 12,
-      stepHintText: `Si la segona fracció té numerador ${f2.n}, el valor de la fracció completa ha de ser equivalent a ${formatFracText(f2)}.`,
+      stepHintText:
+        op === '÷'
+          ? `Com que dividim per ${f2.n}/□, el numerador ${f2.n} divideix a sota i el denominador □ multiplica a dalt. El valor de la fracció completa ha de ser ${formatFracText(f2)}.`
+          : `En multiplicar, el denominador □ actua com a divisor a sota. La fracció completa ha de ser equivalent a ${formatFracText(f2)}.`,
       visualData: {
         knownFrac: f1,
         targetFrac: result,

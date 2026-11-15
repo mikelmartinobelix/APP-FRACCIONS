@@ -39,10 +39,10 @@ export const GuideView: React.FC = () => {
 
         <article className="rounded-xl border border-slate-200 bg-white p-6 space-y-3">
           <h2 className="text-lg font-semibold text-slate-900">
-            02. Multiplicació: en línia recta
+            02. Multiplicació: numerador multiplica, denominador divideix
           </h2>
           <p className="text-sm leading-relaxed text-slate-600">
-            Multipliquem numerador amb numerador i denominador amb denominador. No cal comú denominador. Equivau a calcular una fracció d’una altra fracció.
+            En una fracció, el <strong>numerador té rol de multiplicador</strong> i el <strong>denominador té rol de divisor</strong>. En multiplicar dues fraccions, ajuntem els multiplicadors a dalt i els divisors a sota (en línia recta).
           </p>
           <div className="rounded-lg bg-slate-50 border border-slate-100 p-4 flex items-center justify-center gap-2 font-mono text-sm">
             <FracView fraction={{ n: 2, d: 3 }} size="sm" />
@@ -54,16 +54,16 @@ export const GuideView: React.FC = () => {
             <FracView fraction={{ n: 2, d: 5 }} size="sm" highlight="success" />
           </div>
           <p className="text-xs text-slate-500">
-            Consell: pots simplificar abans o després de multiplicar.
+            2 i 3 multipliquen a dalt; 3 i 5 divideixen a sota. Pots simplificar abans o després.
           </p>
         </article>
 
         <article className="rounded-xl border border-slate-200 bg-white p-6 space-y-3">
           <h2 className="text-lg font-semibold text-slate-900">
-            03. Divisió: multiplica per la inversa
+            03. Divisió: s’inverteixen els rols del divisor
           </h2>
           <p className="text-sm leading-relaxed text-slate-600">
-            Dividir per una fracció és el mateix que multiplicar per la fracció inversa (capgirant només la segona fracció, el divisor).
+            En dividir per una fracció, els seus termes agafen el <strong>rol contrari</strong>: el numerador passa a <strong>dividir</strong> (va a sota) i el denominador passa a <strong>multiplicar</strong> (va a dalt). Per això multipliquem per la fracció inversa!
           </p>
           <div className="rounded-lg bg-slate-50 border border-slate-100 p-4 flex items-center justify-center gap-2 font-mono text-sm">
             <FracView fraction={{ n: 3, d: 4 }} size="sm" />
@@ -77,7 +77,7 @@ export const GuideView: React.FC = () => {
             <FracView fraction={{ n: 15, d: 8 }} size="sm" highlight="success" />
           </div>
           <p className="text-xs text-red-700 font-medium">
-            Error habitual: capgirar la primera fracció en comptes de la segona.
+            Error habitual: invertir els rols de la primera fracció en comptes de la segona.
           </p>
         </article>
 

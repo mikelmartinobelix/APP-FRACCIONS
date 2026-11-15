@@ -208,13 +208,24 @@ export const VisualLab: React.FC = () => {
           {op === '×' && (
             <ol className="space-y-4 text-sm text-slate-700">
               <li className="space-y-1">
-                <p className="font-semibold text-slate-900">1. Multipliquem en línia:</p>
+                <p className="font-semibold text-slate-900">1. Rol de cada terme:</p>
+                <p className="text-slate-600">
+                  Els numeradors (<span className="font-mono font-semibold">{n1}</span> i{' '}
+                  <span className="font-mono font-semibold">{n2}</span>) tenen rol de{' '}
+                  <strong>multiplicadors</strong>; els denominadors (
+                  <span className="font-mono font-semibold">{d1}</span> i{' '}
+                  <span className="font-mono font-semibold">{d2}</span>) tenen rol de{' '}
+                  <strong>divisors</strong>.
+                </p>
+              </li>
+              <li className="space-y-1">
+                <p className="font-semibold text-slate-900">2. Multipliquem en línia:</p>
                 <div className="font-mono text-slate-800 bg-slate-50 rounded-md px-3 py-2">
                   ({n1} × {n2}) / ({d1} × {d2}) = {rawProd.n}/{rawProd.d}
                 </div>
               </li>
               <li className="space-y-1">
-                <p className="font-semibold text-slate-900">2. Simplifiquem:</p>
+                <p className="font-semibold text-slate-900">3. Simplifiquem:</p>
                 <p className="text-slate-600">
                   {gcd(rawProd.n, rawProd.d) > 1
                     ? `Dividim dalt i baix entre ${gcd(rawProd.n, rawProd.d)} → `
@@ -228,7 +239,16 @@ export const VisualLab: React.FC = () => {
           {op === '÷' && (
             <ol className="space-y-4 text-sm text-slate-700">
               <li className="space-y-1">
-                <p className="font-semibold text-slate-900">1. Invertim la segona fracció:</p>
+                <p className="font-semibold text-slate-900">
+                  1. Invertim els rols de la segona fracció:
+                </p>
+                <p className="text-slate-600">
+                  En dividir per <span className="font-mono">{n2}/{d2}</span>, els rols canvien: el
+                  numerador <span className="font-mono font-semibold">{n2}</span> passa a{' '}
+                  <strong>dividir</strong> (a sota) i el denominador{' '}
+                  <span className="font-mono font-semibold">{d2}</span> passa a{' '}
+                  <strong>multiplicar</strong> (a dalt).
+                </p>
                 <div className="font-mono text-slate-800 bg-slate-50 rounded-md px-3 py-2">
                   {n1}/{d1} × {d2}/{n2}
                 </div>
