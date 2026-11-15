@@ -25,6 +25,9 @@ import type {
   PasAPasExercise,
   RepteVisualExercise,
 } from '../types/exercises';
+import mosaicTilesImg from '../assets/images/catalan_mosaic_tiles_1794730951368.jpg';
+import bakeryCocaImg from '../assets/images/bakery_coca_slices_1794730950504.jpg';
+import mountainTrailImg from '../assets/images/mountain_trail_map_1794730952788.jpg';
 
 const L1_DENOMS = [2, 3, 4, 5, 6, 8, 10, 12] as const;
 const ALL_DENOMS = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] as const;
@@ -1165,7 +1168,7 @@ function generateRepteVisual(difficulty: Difficulty, indexHint?: number): RepteV
         conceptTip: 'Compta el total de rajoles (denominador) i expressa cada color com a fracció irreductible.',
         challenge: {
           variant: 'image_context',
-          imageUrl: '/src/assets/images/catalan_mosaic_tiles_1794730951368.jpg',
+          imageUrl: mosaicTilesImg,
           imageAlt: 'Mosaic de 12 rajoles hidràuliques en una graella de 4 per 3 amb dissenys blaus, terracota i blancs',
           imageCaption: 'Graella de 4 × 3 rajoles hidràuliques (12 unitats en total)',
           story:
@@ -1205,7 +1208,7 @@ function generateRepteVisual(difficulty: Difficulty, indexHint?: number): RepteV
       conceptTip: 'Quan calculem una fracció d’una altra fracció (per exemple, la meitat de 4/12), multipliquem les dues fraccions.',
       challenge: {
         variant: 'image_context',
-        imageUrl: '/src/assets/images/catalan_mosaic_tiles_1794730951368.jpg',
+        imageUrl: mosaicTilesImg,
         imageAlt: 'Mosaic de 12 rajoles hidràuliques en una graella de 4 per 3',
         imageCaption: '12 rajoles: 3 terracota, 5 blaves i 4 clares',
         story:
@@ -1243,7 +1246,7 @@ function generateRepteVisual(difficulty: Difficulty, indexHint?: number): RepteV
         conceptTip: 'El pastís està tallat en 8 parts iguals. Passa qualsevol altra fracció a vuitens (denominador 8) per comparar.',
         challenge: {
           variant: 'image_context',
-          imageUrl: '/src/assets/images/bakery_coca_slices_1794730950504.jpg',
+          imageUrl: bakeryCocaImg,
           imageAlt: 'Pastís rodó de fruites tallat en 8 porcions iguals sobre pedra clara',
           imageCaption: 'Pastís dividit en 8 porcions iguals',
           story:
@@ -1279,7 +1282,7 @@ function generateRepteVisual(difficulty: Difficulty, indexHint?: number): RepteV
       conceptTip: 'Vigila: la segona fracció es calcula sobre el pastís que QUEDAVA, no sobre el pastís sencer.',
       challenge: {
         variant: 'image_context',
-        imageUrl: '/src/assets/images/bakery_coca_slices_1794730950504.jpg',
+        imageUrl: bakeryCocaImg,
         imageAlt: 'Pastís rodó de fruites tallat en 8 porcions iguals',
         imageCaption: 'Pastís dividit en 8 porcions iguals',
         story:
@@ -1325,7 +1328,7 @@ function generateRepteVisual(difficulty: Difficulty, indexHint?: number): RepteV
       conceptTip: 'Quan sumem trams d’un recorregut total (1), el tram final és 1 menys la suma dels trams previs.',
       challenge: {
         variant: 'image_context',
-        imageUrl: '/src/assets/images/mountain_trail_map_1794730952788.jpg',
+        imageUrl: mountainTrailImg,
         imageAlt: 'Mapa topogràfic d’una ruta de muntanya dividida en trams',
         imageCaption: 'Perfil cartogràfic d’una ruta en etapes fraccionàries',
         story: isHard

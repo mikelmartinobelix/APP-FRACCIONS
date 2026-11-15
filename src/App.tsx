@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { RefreshCw } from 'lucide-react';
+import { Check, Link2, RefreshCw } from 'lucide-react';
 import { EXERCISE_CYCLE, generateExercise } from './math/exerciseGenerator';
 import type {
   Difficulty,
@@ -72,17 +72,41 @@ const TYPE_LABEL_MAP: Record<ExerciseType, string> = {
   repte_visual: 'Repte visual',
 };
 
+const VALID_MODES: PracticeMode[] = [
+  'mixta',
+  'pas_a_pas',
+  'detecta_errada',
+  'nombre_falta',
+  'repte_visual',
+];
+
+function getInitialParams(): { mode: PracticeMode; difficulty: Difficulty } {
+  if (typeof window === 'undefined') return { mode: 'mixta', difficulty: 1 };
+  const params = new URLSearchParams(window.location.search);
+  const rawMode = params.get('tipus') as PracticeMode | null;
+  const rawDiff = Number(params.get('nivell'));
+  const mode: PracticeMode =
+    rawMode && VALID_MODES.includes(rawMode) ? rawMode : 'mixta';
+  const difficulty: Difficulty =
+    rawDiff === 1 || rawDiff === 2 || rawDiff === 3 ? rawDiff : 1;
+  return { mode, difficulty };
+}
+
 export default function App() {
+  const initialParams = getInitialParams();
   const [activeTab, setActiveTab] = useState<AppTab>('practica');
-  const [mode, setMode] = useState<PracticeMode>('mixta');
-  const [difficulty, setDifficulty] = useState<Difficulty>(1);
+  const [mode, setMode] = useState<PracticeMode>(initialParams.mode);
+  const [difficulty, setDifficulty] = useState<Difficulty>(initialParams.difficulty);
   const [cycleIndex, setCycleIndex] = useState(0);
   const [visualCounter, setVisualCounter] = useState(0);
-  const [exercise, setExercise] = useState<Exercise>(() =>
-    generateExercise('pas_a_pas', 1, 0)
-  );
+  const [exercise, setExercise] = useState<Exercise>(() => {
+    const startType: ExerciseType =
+      initialParams.mode === 'mixta' ? 'pas_a_pas' : initialParams.mode;
+    return generateExercise(startType, initialParams.difficulty, 0);
+  });
   const [completedCurrent, setCompletedCurrent] = useState(false);
   const [stats, setStats] = useState<ProgressStats>(loadStats);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   useEffect(() => {
     try {
@@ -110,16 +134,42 @@ export default function App() {
     }
   };
 
+  const syncUrlParams = (nextMode: PracticeMode, nextDiff: Difficulty) => {
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('tipus', nextMode);
+      url.searchParams.set('nivell', String(nextDiff));
+      window.history.replaceState({}, '', url.toString());
+    } catch {
+      // Ignore history errors in restricted frames
+    }
+  };
+
   const handleModeChange = (nextMode: PracticeMode) => {
     setMode(nextMode);
     setActiveTab('practica');
+    syncUrlParams(nextMode, difficulty);
     spawnExercise(nextMode, difficulty, cycleIndex, visualCounter);
   };
 
   const handleDifficultyChange = (nextDiff: Difficulty) => {
     setDifficulty(nextDiff);
     setActiveTab('practica');
+    syncUrlParams(mode, nextDiff);
     spawnExercise(mode, nextDiff, cycleIndex, visualCounter);
+  };
+
+  const handleCopyShareLink = async () => {
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('tipus', mode);
+      url.searchParams.set('nivell', String(difficulty));
+      await navigator.clipboard.writeText(url.toString());
+      setCopiedLink(true);
+      window.setTimeout(() => setCopiedLink(false), 2200);
+    } catch {
+      // Fallback ignored if clipboard unavailable
+    }
   };
 
   const handleNextExercise = () => {
@@ -404,6 +454,25 @@ export default function App() {
                   Veure detall
                 </button>
               </div>
+
+              {/* Share preset link for classroom */}
+              <button
+                type="button"
+                onClick={handleCopyShareLink}
+                className="w-full rounded-xl border border-slate-200 bg-white hover:bg-slate-50 px-4 py-3 text-xs font-semibold text-slate-700 flex items-center justify-center gap-2 transition-colors"
+              >
+                {copiedLink ? (
+                  <>
+                    <Check className="w-4 h-4 text-emerald-700" />
+                    <span className="text-emerald-800">Enllaç copiat amb aquest nivell i tipus</span>
+                  </>
+                ) : (
+                  <>
+                    <Link2 className="w-4 h-4 text-slate-500" />
+                    <span>Copia l’enllaç d’aquesta pràctica per a la classe</span>
+                  </>
+                )}
+              </button>
             </aside>
           </div>
         )}
