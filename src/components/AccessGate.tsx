@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { AlertCircle, Eye, EyeOff, Lock } from 'lucide-react';
+import { AlertCircle, Eye, EyeOff, Lock, Mail, User } from 'lucide-react';
+import type { StudentSession } from '../services/sheetTracker';
 
 const EXPECTED_DIGEST = '63f8c07e:13512942';
-export const ACCESS_STORAGE_KEY = 'fracciolab_access_v1';
+const ALLOWED_DOMAIN = '@fundaciollor.cat';
+export const SESSION_STORAGE_KEY = 'fracciolab_student_v1';
 
 export function computeAccessDigest(s: string): string {
   let h1 = 2166136261 >>> 0;
@@ -15,43 +17,93 @@ export function computeAccessDigest(s: string): string {
   return `${h1.toString(16)}:${h2.toString(16)}`;
 }
 
-export function isAccessUnlocked(): boolean {
+export function isValidSchoolEmail(raw: string): boolean {
+  const email = raw.trim().toLowerCase();
+  const atIdx = email.indexOf('@');
+  if (atIdx < 1) return false;
+  const localPart = email.slice(0, atIdx);
+  if (/\s/.test(localPart)) return false;
+  return email.endsWith(ALLOWED_DOMAIN) && email.length > ALLOWED_DOMAIN.length;
+}
+
+export function loadStudentSession(): StudentSession | null {
   try {
-    return sessionStorage.getItem(ACCESS_STORAGE_KEY) === EXPECTED_DIGEST;
+    const raw = sessionStorage.getItem(SESSION_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<StudentSession>;
+    if (
+      typeof parsed.email !== 'string' ||
+      typeof parsed.name !== 'string' ||
+      typeof parsed.password !== 'string'
+    ) {
+      return null;
+    }
+    if (!isValidSchoolEmail(parsed.email)) return null;
+    if (computeAccessDigest(parsed.password) !== EXPECTED_DIGEST) return null;
+    return {
+      email: parsed.email.trim().toLowerCase(),
+      name: parsed.name.trim(),
+      password: parsed.password,
+    };
   } catch {
-    return false;
+    return null;
+  }
+}
+
+export function clearStudentSession(): void {
+  try {
+    sessionStorage.removeItem(SESSION_STORAGE_KEY);
+  } catch {
+    // Ignore storage restrictions
   }
 }
 
 interface AccessGateProps {
-  onUnlock: () => void;
+  onUnlock: (session: StudentSession) => void;
 }
 
 export const AccessGate: React.FC<AccessGateProps> = ({ onUnlock }) => {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const trimmed = password.trim();
-    if (!trimmed) {
-      setError('Introdueix la contrasenya de la classe.');
+    const cleanName = name.trim();
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPass = password.trim();
+
+    if (cleanName.length < 2) {
+      setError('Escriu el teu nom i cognoms per identificar la teva feina.');
       return;
     }
 
-    const digest = computeAccessDigest(trimmed);
-    if (digest === EXPECTED_DIGEST) {
-      try {
-        sessionStorage.setItem(ACCESS_STORAGE_KEY, digest);
-      } catch {
-        // Ignore sessionStorage restrictions
-      }
-      setError(null);
-      onUnlock();
-    } else {
-      setError('Contrasenya incorrecta. Comprova les majúscules i minúscules.');
+    if (!isValidSchoolEmail(cleanEmail)) {
+      setError('Només es permet l’accés amb un correu electrònic del domini @fundaciollor.cat.');
+      return;
     }
+
+    if (!cleanPass || computeAccessDigest(cleanPass) !== EXPECTED_DIGEST) {
+      setError('Contrasenya de classe incorrecta. Comprova les majúscules i minúscules.');
+      return;
+    }
+
+    const session: StudentSession = {
+      email: cleanEmail,
+      name: cleanName,
+      password: cleanPass,
+    };
+
+    try {
+      sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
+    } catch {
+      // Ignore sessionStorage restrictions
+    }
+
+    setError(null);
+    onUnlock(session);
   };
 
   return (
@@ -66,14 +118,63 @@ export const AccessGate: React.FC<AccessGateProps> = ({ onUnlock }) => {
           </div>
 
           <h1 className="text-2xl font-semibold text-slate-900 pt-2">
-            Accés per a l’alumnat
+            Identificació de l’alumnat
           </h1>
           <p className="text-sm leading-relaxed text-slate-600">
-            Introdueix la contrasenya facilitada pel professorat per accedir als exercicis de fraccions.
+            Accedeix amb el teu correu <span className="font-semibold text-slate-800">@fundaciollor.cat</span> i la contrasenya de classe per desar el seguiment de la teva pràctica.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1.5">
+            <label
+              htmlFor="student-name"
+              className="block text-xs font-semibold text-slate-700"
+            >
+              Nom i cognoms
+            </label>
+            <div className="relative">
+              <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                id="student-name"
+                type="text"
+                value={name}
+                autoFocus
+                autoComplete="name"
+                placeholder="Ex. Laia Puig"
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (error) setError(null);
+                }}
+                className="w-full h-11 pl-10 pr-3.5 rounded-lg border border-slate-300 bg-white text-sm font-medium text-slate-900 outline-none transition-colors focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label
+              htmlFor="student-email"
+              className="block text-xs font-semibold text-slate-700"
+            >
+              Correu electrònic del centre
+            </label>
+            <div className="relative">
+              <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                id="student-email"
+                type="email"
+                value={email}
+                autoComplete="email"
+                placeholder="alumne@fundaciollor.cat"
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (error) setError(null);
+                }}
+                className="w-full h-11 pl-10 pr-3.5 rounded-lg border border-slate-300 bg-white text-sm font-medium text-slate-900 outline-none transition-colors focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20"
+              />
+            </div>
+          </div>
+
           <div className="space-y-1.5">
             <label
               htmlFor="classroom-password"
@@ -86,18 +187,13 @@ export const AccessGate: React.FC<AccessGateProps> = ({ onUnlock }) => {
                 id="classroom-password"
                 type={showPassword ? 'text' : 'password'}
                 value={password}
-                autoFocus
                 autoComplete="current-password"
                 placeholder="Escriu la contrasenya"
                 onChange={(e) => {
                   setPassword(e.target.value);
                   if (error) setError(null);
                 }}
-                className={`w-full h-11 pl-3.5 pr-11 rounded-lg border text-sm font-medium outline-none transition-colors ${
-                  error
-                    ? 'border-red-500 bg-red-50/40 text-red-950 focus:ring-2 focus:ring-red-500/20'
-                    : 'border-slate-300 bg-white text-slate-900 focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20'
-                }`}
+                className="w-full h-11 pl-3.5 pr-11 rounded-lg border border-slate-300 bg-white text-sm font-medium text-slate-900 outline-none transition-colors focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20"
               />
               <button
                 type="button"

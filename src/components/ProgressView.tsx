@@ -4,6 +4,8 @@ import type { Difficulty, ExerciseType, ProgressStats } from '../types/exercises
 
 interface ProgressViewProps {
   stats: ProgressStats;
+  studentName?: string;
+  studentEmail?: string;
   onReset: () => void;
 }
 
@@ -20,7 +22,12 @@ const DIFF_LABELS: Record<Difficulty, string> = {
   3: 'Nivell 3 (3r–4t ESO)',
 };
 
-export const ProgressView: React.FC<ProgressViewProps> = ({ stats, onReset }) => {
+export const ProgressView: React.FC<ProgressViewProps> = ({
+  stats,
+  studentName,
+  studentEmail,
+  onReset,
+}) => {
   const accuracy =
     stats.totalCompleted > 0
       ? Math.round((stats.cleanCount / stats.totalCompleted) * 100)
@@ -34,7 +41,15 @@ export const ProgressView: React.FC<ProgressViewProps> = ({ stats, onReset }) =>
             Progrés de l’alumnat
           </h1>
           <p className="mt-2 text-slate-600">
-            Seguiment local de la sessió: precisió, ratxa d’encerts i domini per tipus d’exercici.
+            {studentName && studentEmail ? (
+              <>
+                Sessió de <span className="font-semibold text-slate-900">{studentName}</span>{' '}
+                <span aria-hidden="true">·</span> {studentEmail}{' '}
+                <span aria-hidden="true">·</span> Els exercicis resolts s’envien automàticament al registre del professorat.
+              </>
+            ) : (
+              'Seguiment de la sessió: precisió, ratxa d’encerts i domini per tipus d’exercici.'
+            )}
           </p>
         </div>
 

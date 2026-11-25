@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Check, Link2, RefreshCw } from 'lucide-react';
+import { Check, Link2, LogOut, RefreshCw } from 'lucide-react';
 import { EXERCISE_CYCLE, generateExercise } from './math/exerciseGenerator';
 import type {
   Difficulty,
@@ -15,11 +15,20 @@ import { VisualChallengeExercise } from './components/VisualChallengeExercise';
 import { VisualLab } from './components/VisualLab';
 import { ProgressView } from './components/ProgressView';
 import { GuideView } from './components/GuideView';
-import { AccessGate, isAccessUnlocked } from './components/AccessGate';
+import {
+  AccessGate,
+  clearStudentSession,
+  loadStudentSession,
+} from './components/AccessGate';
+import {
+  recordExerciseCompletion,
+  recordStudentLogin,
+  type StudentSession,
+} from './services/sheetTracker';
 
 type AppTab = 'practica' | 'laboratori' | 'progres' | 'guia';
 
-const STORAGE_KEY = 'fracciolab_progress_v1';
+const STORAGE_KEY_PREFIX = 'fracciolab_progress_v1_';
 
 const EMPTY_STATS: ProgressStats = {
   totalCompleted: 0,
@@ -40,9 +49,10 @@ const EMPTY_STATS: ProgressStats = {
   history: [],
 };
 
-function loadStats(): ProgressStats {
+function loadStats(email?: string): ProgressStats {
+  if (!email) return EMPTY_STATS;
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(`${STORAGE_KEY_PREFIX}${email}`);
     if (!raw) return EMPTY_STATS;
     const parsed = JSON.parse(raw) as ProgressStats;
     if (typeof parsed.totalCompleted !== 'number') return EMPTY_STATS;
@@ -106,17 +116,25 @@ export default function App() {
     return generateExercise(startType, initialParams.difficulty, 0);
   });
   const [completedCurrent, setCompletedCurrent] = useState(false);
-  const [stats, setStats] = useState<ProgressStats>(loadStats);
+  const [studentSession, setStudentSession] = useState<StudentSession | null>(() =>
+    loadStudentSession()
+  );
+  const [stats, setStats] = useState<ProgressStats>(() =>
+    loadStats(loadStudentSession()?.email)
+  );
   const [copiedLink, setCopiedLink] = useState(false);
-  const [unlocked, setUnlocked] = useState<boolean>(() => isAccessUnlocked());
 
   useEffect(() => {
+    if (!studentSession) return;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(stats));
+      localStorage.setItem(
+        `${STORAGE_KEY_PREFIX}${studentSession.email}`,
+        JSON.stringify(stats)
+      );
     } catch {
       // Ignore storage quota errors
     }
-  }, [stats]);
+  }, [stats, studentSession]);
 
   const spawnExercise = (
     nextMode: PracticeMode,
@@ -185,17 +203,30 @@ export default function App() {
     if (completedCurrent) return;
     setCompletedCurrent(true);
 
+    const clean = solvedCleanly && !usedHint;
+    const nextStreak = clean ? stats.currentStreak + 1 : 0;
+
+    if (studentSession) {
+      void recordExerciseCompletion(studentSession, {
+        exerciseType: exercise.type,
+        difficulty: exercise.difficulty,
+        summary: exercise.subtitle,
+        usedHint,
+        solvedCleanly,
+        currentStreak: nextStreak,
+      });
+    }
+
     setStats((prev) => {
-      const clean = solvedCleanly && !usedHint;
-      const nextStreak = clean ? prev.currentStreak + 1 : 0;
-      const nextBest = Math.max(prev.bestStreak, nextStreak);
+      const updatedStreak = clean ? prev.currentStreak + 1 : 0;
+      const nextBest = Math.max(prev.bestStreak, updatedStreak);
       const t = exercise.type;
       const d = exercise.difficulty;
 
       return {
         totalCompleted: prev.totalCompleted + 1,
         cleanCount: prev.cleanCount + (clean ? 1 : 0),
-        currentStreak: nextStreak,
+        currentStreak: updatedStreak,
         bestStreak: nextBest,
         byType: {
           ...prev.byType,
@@ -231,8 +262,19 @@ export default function App() {
     setStats(EMPTY_STATS);
   };
 
-  if (!unlocked) {
-    return <AccessGate onUnlock={() => setUnlocked(true)} />;
+  const handleUnlock = (session: StudentSession) => {
+    setStudentSession(session);
+    setStats(loadStats(session.email));
+    void recordStudentLogin(session);
+  };
+
+  const handleLogout = () => {
+    clearStudentSession();
+    setStudentSession(null);
+  };
+
+  if (!studentSession) {
+    return <AccessGate onUnlock={handleUnlock} />;
   }
 
   return (
@@ -461,6 +503,26 @@ export default function App() {
                 </button>
               </div>
 
+              {/* Student Identity & Sign Out */}
+              <div className="rounded-xl border border-slate-200 bg-white px-5 py-3.5 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="text-xs font-semibold text-slate-900 truncate">
+                    {studentSession.name}
+                  </div>
+                  <div className="text-xs text-slate-500 truncate">
+                    {studentSession.email}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors whitespace-nowrap shrink-0"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Surt</span>
+                </button>
+              </div>
+
               {/* Share preset link for classroom */}
               <button
                 type="button"
@@ -485,7 +547,12 @@ export default function App() {
 
         {activeTab === 'laboratori' && <VisualLab />}
         {activeTab === 'progres' && (
-          <ProgressView stats={stats} onReset={handleResetStats} />
+          <ProgressView
+            stats={stats}
+            studentName={studentSession.name}
+            studentEmail={studentSession.email}
+            onReset={handleResetStats}
+          />
         )}
         {activeTab === 'guia' && <GuideView />}
       </main>
