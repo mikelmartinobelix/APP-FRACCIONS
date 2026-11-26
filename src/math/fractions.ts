@@ -92,12 +92,12 @@ export function scaleToDenominator(f: Fraction, targetD: number): Fraction {
 }
 
 export function parseFractionStrings(nStr: string, dStr: string): Fraction | null {
-  const nTrim = nStr.trim();
-  const dTrim = dStr.trim();
-  if (nTrim === '' || dTrim === '') return null;
+  const nTrim = nStr.replace(/\u2212/g, '-').trim();
+  const dTrim = dStr.replace(/\u2212/g, '-').trim();
+  if (!/^-?\d+$/.test(nTrim) || !/^-?\d+$/.test(dTrim)) return null;
   const n = Number(nTrim);
   const d = Number(dTrim);
-  if (!Number.isInteger(n) || !Number.isInteger(d) || d === 0) return null;
+  if (!Number.isSafeInteger(n) || !Number.isSafeInteger(d) || d === 0) return null;
   return normalize({ n, d });
 }
 

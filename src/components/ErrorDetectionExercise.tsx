@@ -63,11 +63,18 @@ export const ErrorDetectionExercise: React.FC<ErrorDetectionExerciseProps> = ({
   const handleCheckFix = () => {
     const effectiveD =
       exercise.correctFinalAnswer.d === 1 && fixD.trim() === '' ? '1' : fixD;
+    if (fixN.trim() === '' || effectiveD.trim() === '') {
+      setFeedback({
+        kind: 'error',
+        message: 'Completa tant el numerador com el denominador abans de comprovar.',
+      });
+      return;
+    }
     const parsed = parseFractionStrings(fixN, effectiveD);
     if (!parsed) {
       setFeedback({
         kind: 'error',
-        message: 'Introdueix una fracció vàlida amb nombres enters.',
+        message: 'Introdueix una fracció vàlida amb nombres enters (el denominador no pot ser 0).',
       });
       return;
     }

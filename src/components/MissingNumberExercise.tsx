@@ -25,9 +25,13 @@ export const MissingNumberExercise: React.FC<MissingNumberExerciseProps> = ({
   const [solved, setSolved] = useState(false);
 
   const handleCheck = () => {
-    const trimmed = inputVal.trim();
+    const trimmed = inputVal.replace(/\u2212/g, '-').trim();
+    if (!/^-?\d+$/.test(trimmed)) {
+      setFeedback('Escriu un nombre enter vàlid dins de la casella.');
+      return;
+    }
     const num = Number(trimmed);
-    if (trimmed === '' || !Number.isInteger(num)) {
+    if (!Number.isSafeInteger(num)) {
       setFeedback('Escriu un nombre enter vàlid dins de la casella.');
       return;
     }
@@ -92,7 +96,7 @@ export const MissingNumberExercise: React.FC<MissingNumberExerciseProps> = ({
                       disabled={solved}
                       autoFocus
                       onChange={(e) => {
-                        setInputVal(e.target.value.replace(/[^0-9-]/g, ''));
+                        setInputVal(e.target.value.replace(/\u2212/g, '-').replace(/[^0-9-]/g, ''));
                         setFeedback(null);
                       }}
                       onKeyDown={(e) => {

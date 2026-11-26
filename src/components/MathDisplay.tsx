@@ -171,7 +171,7 @@ export const FracInput: React.FC<FracInputProps> = ({
           disabled={disabled}
           autoFocus={autoFocus}
           onChange={(e) => {
-            const v = e.target.value.replace(/[^0-9-]/g, '');
+            const v = e.target.value.replace(/\u2212/g, '-').replace(/[^0-9-]/g, '');
             onNChange(v);
           }}
           onKeyDown={handleKeyDown}

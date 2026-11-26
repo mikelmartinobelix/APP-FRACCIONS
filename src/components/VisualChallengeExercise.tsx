@@ -109,10 +109,18 @@ const ImageContextRunner: React.FC<{
 
     if (currentStep.kind === 'single_frac') {
       const effectiveD =
-        currentStep.expected.d === 1 && singleD.trim() === '' ? '1' : singleD;
+        currentStep.requireExactDenominator !== undefined
+          ? String(currentStep.requireExactDenominator)
+          : currentStep.expected.d === 1 && singleD.trim() === ''
+            ? '1'
+            : singleD;
+      if (singleN.trim() === '' || effectiveD.trim() === '') {
+        setFeedback({ kind: 'error', message: 'Completa el numerador i el denominador.' });
+        return;
+      }
       const parsed = parseFractionStrings(singleN, effectiveD);
       if (!parsed) {
-        setFeedback({ kind: 'error', message: 'Escriu una fracció vàlida.' });
+        setFeedback({ kind: 'error', message: 'Escriu una fracció vàlida (el denominador no pot ser 0).' });
         return;
       }
       if (!areEquivalent(parsed, currentStep.expected)) {
@@ -120,6 +128,17 @@ const ImageContextRunner: React.FC<{
         setFeedback({
           kind: 'error',
           message: 'Aquesta fracció no coincideix amb la situació del problema.',
+        });
+        return;
+      }
+      if (
+        currentStep.requireExactDenominator !== undefined &&
+        parsed.n !== 0 &&
+        parsed.d !== currentStep.requireExactDenominator
+      ) {
+        setFeedback({
+          kind: 'info',
+          message: `És equivalent, però manté el denominador ${currentStep.requireExactDenominator}.`,
         });
         return;
       }
@@ -138,16 +157,29 @@ const ImageContextRunner: React.FC<{
       const dL =
         currentStep.lockDenominators !== undefined
           ? String(currentStep.lockDenominators)
-          : leftD;
+          : currentStep.expectedLeft.d === 1 && leftD.trim() === ''
+            ? '1'
+            : leftD;
       const dR =
         currentStep.lockDenominators !== undefined
           ? String(currentStep.lockDenominators)
-          : rightD;
+          : currentStep.expectedRight.d === 1 && rightD.trim() === ''
+            ? '1'
+            : rightD;
+      if (
+        leftN.trim() === '' ||
+        dL.trim() === '' ||
+        rightN.trim() === '' ||
+        dR.trim() === ''
+      ) {
+        setFeedback({ kind: 'error', message: 'Completa tots els requadres de les dues fraccions.' });
+        return;
+      }
       const parsedL = parseFractionStrings(leftN, dL);
       const parsedR = parseFractionStrings(rightN, dR);
 
       if (!parsedL || !parsedR) {
-        setFeedback({ kind: 'error', message: 'Completa totes dues fraccions.' });
+        setFeedback({ kind: 'error', message: 'Introdueix nombres enters vàlids (el denominador no pot ser 0).' });
         return;
       }
 
@@ -260,6 +292,7 @@ const ImageContextRunner: React.FC<{
                   setSingleD(v);
                   setFeedback(null);
                 }}
+                lockedDenominator={currentStep.requireExactDenominator}
                 autoFocus
                 onSubmit={handleCheck}
                 status={feedback?.kind === 'error' ? 'error' : 'idle'}
@@ -382,9 +415,15 @@ const AreaGridBuilderRunner: React.FC<{
       return;
     }
 
-    const parsed = parseFractionStrings(ansN, ansD || '1');
+    const effectiveD =
+      challenge.finalAnswer.d === 1 && ansD.trim() === '' ? '1' : ansD;
+    if (ansN.trim() === '' || effectiveD.trim() === '') {
+      setFeedback({ kind: 'error', message: 'Escriu el numerador i el denominador de la fracció.' });
+      return;
+    }
+    const parsed = parseFractionStrings(ansN, effectiveD);
     if (!parsed) {
-      setFeedback({ kind: 'error', message: 'Escriu la fracció irreductible del producte.' });
+      setFeedback({ kind: 'error', message: 'Escriu una fracció vàlida (el denominador no pot ser 0).' });
       return;
     }
 
@@ -592,9 +631,15 @@ const StripBuilderRunner: React.FC<{
       return;
     }
 
-    const parsed = parseFractionStrings(ansN, ansD || '1');
+    const effectiveD =
+      challenge.finalAnswer.d === 1 && ansD.trim() === '' ? '1' : ansD;
+    if (ansN.trim() === '' || effectiveD.trim() === '') {
+      setFeedback({ kind: 'error', message: 'Escriu el numerador i el denominador al requadre.' });
+      return;
+    }
+    const parsed = parseFractionStrings(ansN, effectiveD);
     if (!parsed) {
-      setFeedback({ kind: 'error', message: 'Escriu també la fracció irreductible al requadre.' });
+      setFeedback({ kind: 'error', message: 'Escriu una fracció vàlida (el denominador no pot ser 0).' });
       return;
     }
     if (!areEquivalent(parsed, challenge.finalAnswer)) {

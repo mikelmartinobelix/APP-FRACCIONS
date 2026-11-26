@@ -96,7 +96,20 @@ export const StepByStepExercise: React.FC<StepByStepExerciseProps> = ({
 
     if (currentStep.kind === 'single_frac') {
       const effectiveD =
-        currentStep.expected.d === 1 && singleD.trim() === '' ? '1' : singleD;
+        currentStep.requireExactDenominator !== undefined
+          ? String(currentStep.requireExactDenominator)
+          : currentStep.expected.d === 1 && singleD.trim() === ''
+            ? '1'
+            : singleD;
+
+      if (singleN.trim() === '' || effectiveD.trim() === '') {
+        setFeedback({
+          kind: 'error',
+          message: 'Completa tant el numerador com el denominador abans de comprovar.',
+        });
+        return;
+      }
+
       const parsed = parseFractionStrings(singleN, effectiveD);
       if (!parsed) {
         setFeedback({
@@ -117,6 +130,7 @@ export const StepByStepExercise: React.FC<StepByStepExerciseProps> = ({
 
       if (
         currentStep.requireExactDenominator !== undefined &&
+        parsed.n !== 0 &&
         parsed.d !== currentStep.requireExactDenominator
       ) {
         setFeedback({
@@ -149,11 +163,28 @@ export const StepByStepExercise: React.FC<StepByStepExerciseProps> = ({
       const dL =
         currentStep.lockDenominators !== undefined
           ? String(currentStep.lockDenominators)
-          : leftD;
+          : currentStep.expectedLeft.d === 1 && leftD.trim() === ''
+            ? '1'
+            : leftD;
       const dR =
         currentStep.lockDenominators !== undefined
           ? String(currentStep.lockDenominators)
-          : rightD;
+          : currentStep.expectedRight.d === 1 && rightD.trim() === ''
+            ? '1'
+            : rightD;
+
+      if (
+        leftN.trim() === '' ||
+        dL.trim() === '' ||
+        rightN.trim() === '' ||
+        dR.trim() === ''
+      ) {
+        setFeedback({
+          kind: 'error',
+          message: 'Completa tots els requadres de les dues fraccions abans de comprovar.',
+        });
+        return;
+      }
 
       const parsedL = parseFractionStrings(leftN, dL);
       const parsedR = parseFractionStrings(rightN, dR);
@@ -161,7 +192,7 @@ export const StepByStepExercise: React.FC<StepByStepExerciseProps> = ({
       if (!parsedL || !parsedR) {
         setFeedback({
           kind: 'error',
-          message: 'Completa totes dues fraccions amb nombres enters vàlids.',
+          message: 'Introdueix nombres enters vàlids (el denominador no pot ser 0).',
         });
         return;
       }
