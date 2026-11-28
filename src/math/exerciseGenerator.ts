@@ -547,7 +547,7 @@ function generatePasAPasLevel3(): PasAPasExercise {
         type: 'pas_a_pas',
         id: makeId('pap'),
         difficulty: 3,
-        subtitle: 'Doble parèntesi i signes (3r–4t ESO)',
+        subtitle: 'Doble parèntesi i signes',
         conceptTip:
           'Resol cada parèntesi per separat fins a simplificar-lo. Després aplica la multiplicació o divisió aplicant la regla dels signes (+ · − = −, − · − = +).',
         expression: [

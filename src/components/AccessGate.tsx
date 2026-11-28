@@ -1,10 +1,22 @@
 import React, { useState } from 'react';
-import { AlertCircle, Eye, EyeOff, Lock, Mail, User } from 'lucide-react';
-import type { StudentSession } from '../services/sheetTracker';
+import { AlertCircle, Eye, EyeOff, Lock, User } from 'lucide-react';
+import type {
+  ClassGroup,
+  CourseLevel,
+  StudentSession,
+} from '../services/sheetTracker';
 
 const EXPECTED_DIGEST = '63f8c07e:13512942';
-const ALLOWED_DOMAIN = '@fundaciollor.cat';
-export const SESSION_STORAGE_KEY = 'fracciolab_student_v1';
+export const SESSION_STORAGE_KEY = 'fracciolab_student_v3';
+
+export const COURSE_OPTIONS: CourseLevel[] = [
+  '1r ESO',
+  '2n ESO',
+  '3r ESO',
+  '4t ESO',
+];
+
+export const CLASS_OPTIONS: ClassGroup[] = ['A', 'B', 'C'];
 
 export function computeAccessDigest(s: string): string {
   let h1 = 2166136261 >>> 0;
@@ -17,33 +29,31 @@ export function computeAccessDigest(s: string): string {
   return `${h1.toString(16)}:${h2.toString(16)}`;
 }
 
-export function isValidSchoolEmail(raw: string): boolean {
-  const email = raw.trim().toLowerCase();
-  const atIdx = email.indexOf('@');
-  if (atIdx < 1) return false;
-  const localPart = email.slice(0, atIdx);
-  if (/\s/.test(localPart)) return false;
-  return email.endsWith(ALLOWED_DOMAIN) && email.length > ALLOWED_DOMAIN.length;
+interface StoredSession extends StudentSession {
+  accessDigest?: string;
 }
 
 export function loadStudentSession(): StudentSession | null {
   try {
     const raw = sessionStorage.getItem(SESSION_STORAGE_KEY);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as Partial<StudentSession>;
+    const parsed = JSON.parse(raw) as Partial<StoredSession>;
     if (
-      typeof parsed.email !== 'string' ||
       typeof parsed.name !== 'string' ||
-      typeof parsed.password !== 'string'
+      !parsed.course ||
+      !COURSE_OPTIONS.includes(parsed.course) ||
+      !parsed.classGroup ||
+      !CLASS_OPTIONS.includes(parsed.classGroup) ||
+      parsed.accessDigest !== EXPECTED_DIGEST
     ) {
       return null;
     }
-    if (!isValidSchoolEmail(parsed.email)) return null;
-    if (computeAccessDigest(parsed.password) !== EXPECTED_DIGEST) return null;
+    const cleanName = parsed.name.trim();
+    if (cleanName.length < 2) return null;
     return {
-      email: parsed.email.trim().toLowerCase(),
-      name: parsed.name.trim(),
-      password: parsed.password,
+      name: cleanName,
+      course: parsed.course,
+      classGroup: parsed.classGroup,
     };
   } catch {
     return null;
@@ -64,7 +74,8 @@ interface AccessGateProps {
 
 export const AccessGate: React.FC<AccessGateProps> = ({ onUnlock }) => {
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [course, setCourse] = useState<CourseLevel | null>(null);
+  const [classGroup, setClassGroup] = useState<ClassGroup | null>(null);
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -72,7 +83,6 @@ export const AccessGate: React.FC<AccessGateProps> = ({ onUnlock }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const cleanName = name.trim();
-    const cleanEmail = email.trim().toLowerCase();
     const cleanPass = password.trim();
 
     if (cleanName.length < 2) {
@@ -80,8 +90,13 @@ export const AccessGate: React.FC<AccessGateProps> = ({ onUnlock }) => {
       return;
     }
 
-    if (!isValidSchoolEmail(cleanEmail)) {
-      setError('Només es permet l’accés amb un correu electrònic del domini @fundaciollor.cat.');
+    if (!course) {
+      setError('Selecciona el teu curs (1r, 2n, 3r o 4t ESO).');
+      return;
+    }
+
+    if (!classGroup) {
+      setError('Selecciona la teva classe (A, B o C).');
       return;
     }
 
@@ -91,13 +106,17 @@ export const AccessGate: React.FC<AccessGateProps> = ({ onUnlock }) => {
     }
 
     const session: StudentSession = {
-      email: cleanEmail,
       name: cleanName,
-      password: cleanPass,
+      course,
+      classGroup,
     };
 
     try {
-      sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(session));
+      const stored: StoredSession = {
+        ...session,
+        accessDigest: EXPECTED_DIGEST,
+      };
+      sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(stored));
     } catch {
       // Ignore sessionStorage restrictions
     }
@@ -121,7 +140,7 @@ export const AccessGate: React.FC<AccessGateProps> = ({ onUnlock }) => {
             Identificació de l’alumnat
           </h1>
           <p className="text-sm leading-relaxed text-slate-600">
-            Accedeix amb el teu correu <span className="font-semibold text-slate-800">@fundaciollor.cat</span> i la contrasenya de classe per desar el seguiment de la teva pràctica.
+            Introdueix el teu nom i cognoms, el curs, la classe i la contrasenya per començar a practicar.
           </p>
         </div>
 
@@ -152,26 +171,56 @@ export const AccessGate: React.FC<AccessGateProps> = ({ onUnlock }) => {
           </div>
 
           <div className="space-y-1.5">
-            <label
-              htmlFor="student-email"
-              className="block text-xs font-semibold text-slate-700"
-            >
-              Correu electrònic del centre
-            </label>
-            <div className="relative">
-              <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <input
-                id="student-email"
-                type="email"
-                value={email}
-                autoComplete="email"
-                placeholder="alumne@fundaciollor.cat"
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (error) setError(null);
-                }}
-                className="w-full h-11 pl-10 pr-3.5 rounded-lg border border-slate-300 bg-white text-sm font-medium text-slate-900 outline-none transition-colors focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20"
-              />
+            <span className="block text-xs font-semibold text-slate-700">Curs</span>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2" role="group" aria-label="Curs">
+              {COURSE_OPTIONS.map((opt) => {
+                const active = course === opt;
+                return (
+                  <button
+                    key={opt}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => {
+                      setCourse(opt);
+                      if (error) setError(null);
+                    }}
+                    className={`h-11 rounded-lg border text-sm font-semibold transition-colors cursor-pointer ${
+                      active
+                        ? 'border-blue-700 bg-blue-700 text-white'
+                        : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    {opt}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <span className="block text-xs font-semibold text-slate-700">Classe</span>
+            <div className="grid grid-cols-3 gap-2" role="group" aria-label="Classe">
+              {CLASS_OPTIONS.map((grp) => {
+                const active = classGroup === grp;
+                return (
+                  <button
+                    key={grp}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => {
+                      setClassGroup(grp);
+                      if (error) setError(null);
+                    }}
+                    className={`h-11 rounded-lg border text-sm font-semibold transition-colors cursor-pointer ${
+                      active
+                        ? 'border-slate-900 bg-slate-900 text-white'
+                        : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
+                    }`}
+                  >
+                    {grp}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -180,7 +229,7 @@ export const AccessGate: React.FC<AccessGateProps> = ({ onUnlock }) => {
               htmlFor="classroom-password"
               className="block text-xs font-semibold text-slate-700"
             >
-              Contrasenya de classe
+              Contrasenya
             </label>
             <div className="relative">
               <input

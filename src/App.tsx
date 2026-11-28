@@ -49,10 +49,15 @@ const EMPTY_STATS: ProgressStats = {
   history: [],
 };
 
-function loadStats(email?: string): ProgressStats {
-  if (!email) return EMPTY_STATS;
+function getStudentStorageKey(session: StudentSession | null): string | undefined {
+  if (!session) return undefined;
+  return `${session.course}_${session.classGroup}_${session.name.toLowerCase().replace(/\s+/g, '_')}`;
+}
+
+function loadStats(studentKey?: string): ProgressStats {
+  if (!studentKey) return EMPTY_STATS;
   try {
-    const raw = localStorage.getItem(`${STORAGE_KEY_PREFIX}${email}`);
+    const raw = localStorage.getItem(`${STORAGE_KEY_PREFIX}${studentKey}`);
     if (!raw) return EMPTY_STATS;
     const parsed = JSON.parse(raw) as ProgressStats;
     if (typeof parsed.totalCompleted !== 'number') return EMPTY_STATS;
@@ -71,9 +76,9 @@ const MODE_OPTIONS: { id: PracticeMode; label: string; desc: string }[] = [
 ];
 
 const DIFFICULTY_OPTIONS: { id: Difficulty; label: string; sub: string }[] = [
-  { id: 1, label: 'Nivell 1', sub: '1r ESO · Operacions bàsiques' },
-  { id: 2, label: 'Nivell 2', sub: '2n ESO · Combinades i parèntesis' },
-  { id: 3, label: 'Nivell 3', sub: '3r–4t ESO · Signes i doble parèntesi' },
+  { id: 1, label: 'Nivell 1', sub: 'Operacions bàsiques' },
+  { id: 2, label: 'Nivell 2', sub: 'Combinades i parèntesis' },
+  { id: 3, label: 'Nivell 3', sub: 'Signes i doble parèntesi' },
 ];
 
 const TYPE_LABEL_MAP: Record<ExerciseType, string> = {
@@ -120,17 +125,15 @@ export default function App() {
     loadStudentSession()
   );
   const [stats, setStats] = useState<ProgressStats>(() =>
-    loadStats(loadStudentSession()?.email)
+    loadStats(getStudentStorageKey(loadStudentSession()))
   );
   const [copiedLink, setCopiedLink] = useState(false);
 
   useEffect(() => {
-    if (!studentSession) return;
+    const key = getStudentStorageKey(studentSession);
+    if (!key) return;
     try {
-      localStorage.setItem(
-        `${STORAGE_KEY_PREFIX}${studentSession.email}`,
-        JSON.stringify(stats)
-      );
+      localStorage.setItem(`${STORAGE_KEY_PREFIX}${key}`, JSON.stringify(stats));
     } catch {
       // Ignore storage quota errors
     }
@@ -264,7 +267,7 @@ export default function App() {
 
   const handleUnlock = (session: StudentSession) => {
     setStudentSession(session);
-    setStats(loadStats(session.email));
+    setStats(loadStats(getStudentStorageKey(session)));
     void recordStudentLogin(session);
   };
 
@@ -510,7 +513,7 @@ export default function App() {
                     {studentSession.name}
                   </div>
                   <div className="text-xs text-slate-500 truncate">
-                    {studentSession.email}
+                    {studentSession.course} · Classe {studentSession.classGroup}
                   </div>
                 </div>
                 <button
@@ -550,7 +553,8 @@ export default function App() {
           <ProgressView
             stats={stats}
             studentName={studentSession.name}
-            studentEmail={studentSession.email}
+            studentCourse={studentSession.course}
+            studentClassGroup={studentSession.classGroup}
             onReset={handleResetStats}
           />
         )}

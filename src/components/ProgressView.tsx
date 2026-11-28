@@ -5,7 +5,8 @@ import type { Difficulty, ExerciseType, ProgressStats } from '../types/exercises
 interface ProgressViewProps {
   stats: ProgressStats;
   studentName?: string;
-  studentEmail?: string;
+  studentCourse?: string;
+  studentClassGroup?: string;
   onReset: () => void;
 }
 
@@ -17,15 +18,16 @@ const TYPE_LABELS: Record<ExerciseType, string> = {
 };
 
 const DIFF_LABELS: Record<Difficulty, string> = {
-  1: 'Nivell 1 (1r ESO)',
-  2: 'Nivell 2 (2n ESO)',
-  3: 'Nivell 3 (3r–4t ESO)',
+  1: 'Nivell 1 · Operacions bàsiques',
+  2: 'Nivell 2 · Combinades i parèntesis',
+  3: 'Nivell 3 · Signes i doble parèntesi',
 };
 
 export const ProgressView: React.FC<ProgressViewProps> = ({
   stats,
   studentName,
-  studentEmail,
+  studentCourse,
+  studentClassGroup,
   onReset,
 }) => {
   const accuracy =
@@ -41,10 +43,10 @@ export const ProgressView: React.FC<ProgressViewProps> = ({
             Progrés de l’alumnat
           </h1>
           <p className="mt-2 text-slate-600">
-            {studentName && studentEmail ? (
+            {studentName && studentCourse && studentClassGroup ? (
               <>
                 Sessió de <span className="font-semibold text-slate-900">{studentName}</span>{' '}
-                <span aria-hidden="true">·</span> {studentEmail}{' '}
+                <span aria-hidden="true">·</span> {studentCourse} {studentClassGroup}{' '}
                 <span aria-hidden="true">·</span> Els exercicis resolts s’envien automàticament al registre del professorat.
               </>
             ) : (

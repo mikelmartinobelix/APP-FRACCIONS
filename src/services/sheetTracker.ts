@@ -6,10 +6,13 @@ const DEFAULT_EXEC_URL =
 export const SHEET_WEBHOOK_URL =
   (import.meta.env.VITE_SHEET_WEBHOOK_URL as string | undefined) || DEFAULT_EXEC_URL;
 
+export type CourseLevel = '1r ESO' | '2n ESO' | '3r ESO' | '4t ESO';
+export type ClassGroup = 'A' | 'B' | 'C';
+
 export interface StudentSession {
-  email: string;
   name: string;
-  password: string;
+  course: CourseLevel;
+  classGroup: ClassGroup;
 }
 
 const TYPE_LABELS_CA: Record<ExerciseType, string> = {
@@ -22,9 +25,9 @@ const TYPE_LABELS_CA: Record<ExerciseType, string> = {
 export async function recordStudentLogin(session: StudentSession): Promise<void> {
   await postToSheet({
     event: 'login',
-    email: session.email,
     name: session.name,
-    password: session.password,
+    course: session.course,
+    classGroup: session.classGroup,
     summary: 'Sessió iniciada',
   });
 }
@@ -42,9 +45,9 @@ export async function recordExerciseCompletion(
 ): Promise<void> {
   await postToSheet({
     event: 'exercise',
-    email: session.email,
     name: session.name,
-    password: session.password,
+    course: session.course,
+    classGroup: session.classGroup,
     exerciseType: TYPE_LABELS_CA[details.exerciseType],
     difficulty: details.difficulty,
     summary: details.summary,
