@@ -1,7 +1,7 @@
 import type { Difficulty, ExerciseType } from '../types/exercises';
 
 const DEFAULT_EXEC_URL =
-  'https://script.google.com/macros/s/AKfycbyTmk_zmkdZn7i2898FTD6Qx_rqjXtg_t3D7riKGtnLMUofrABr61uDqCz5hyiX8t7h/exec';
+  'https://script.google.com/macros/s/AKfycbxIgYyX_eU8cAjyVAXaRIRdmjc0Xe9rDlW1dvJdcCJkKxeGQyrBRMg5g9FswOnkcPoU/exec';
 
 export const SHEET_WEBHOOK_URL =
   (import.meta.env.VITE_SHEET_WEBHOOK_URL as string | undefined) || DEFAULT_EXEC_URL;
@@ -66,7 +66,6 @@ async function postToSheet(payload: Record<string, unknown>): Promise<void> {
         'Content-Type': 'text/plain;charset=utf-8',
       },
       body: JSON.stringify(payload),
-      keepalive: true,
     });
   } catch {
     // Non-blocking: never interrupt student practice on transient network issues
